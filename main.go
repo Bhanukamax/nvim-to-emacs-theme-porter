@@ -4,22 +4,20 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
-	//	"reflect"
 )
 
+func runCmd(errorMsg string, name string, arg ...string) {
+	cmd := exec.Command(name, arg...)
+	err := cmd.Run()
+	if err != nil {
+		panic(fmt.Sprintf(errorMsg, err))
+	}
+}
+
 func runNvim() {
-	cmd := exec.Command("/usr/bin/env", "touch", "/tmp/bmax-nvim.pipe" )
-	if err := cmd.Run(); err != nil {
-		panic(fmt.Sprintf("Bmax: Error removing pipe", err))
-	}
-	cmd = exec.Command("/usr/bin/env", "rm", "/tmp/bmax-nvim.pipe" )
-	if err := cmd.Run(); err != nil {
-		panic(fmt.Sprintf("Bmax: Error removing pipe", err))
-	}
-	cmd = exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe" )
-	if err := cmd.Run(); err != nil {
-		panic(fmt.Sprintf("Bmax: Error running the Command", err))
-	}
+	runCmd("Bmax: Error removing pipe", "/usr/bin/env", "touch", "/tmp/bmax-nvim.pipe" )
+	runCmd("Bmax: Error removing pipe", "/usr/bin/env", "rm", "/tmp/bmax-nvim.pipe" )
+	runCmd("Bmax: Error running the Command", "/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe" )
 }
 
 func exportTheme() {
@@ -28,6 +26,18 @@ func exportTheme() {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
 }
+
+func main() {
+	go runNvim()
+	fmt.Println("starting neovim")
+	time.Sleep(time.Second/2)
+	fmt.Println("exporting theme to theme.vim")
+	exportTheme()
+	fmt.Println("done")
+}
+
+	//	colorMap := makeColorMap()
+	//	fmt.Println(colorMap)
 
 type Color struct {
 	fg string
@@ -45,16 +55,4 @@ type ColorMap map[string]Color
 func makeColorMap() ColorMap{
 	colorMap := make(map[string]Color)
 	return colorMap
-}
-
-func main() {
-	//	colorMap := makeColorMap()
-	//	fmt.Println(colorMap)
-
-	go runNvim()
-	fmt.Println("starting neovim")
-	time.Sleep(time.Second/2)
-	fmt.Println("exporting theme to theme.vim")
-	exportTheme()
-	fmt.Println("done")
 }
