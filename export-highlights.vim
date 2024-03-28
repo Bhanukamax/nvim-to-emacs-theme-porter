@@ -1,3 +1,5 @@
+" Copied from:
+" https://gist.github.com/Makaze/c27966b7108f77b280e5a0fce37d727c
 function ExportHighlights(file)
   try
     let lines = execute('hi')
