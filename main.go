@@ -7,18 +7,14 @@ import (
 )
 
 func runNvim() {
-	//	cmd := exec.Command("/home/bmax/.local/bin/nvim --headless --listen /tmp/bmax-nvim.pipe")
-	cmd := exec.Command("/home/bmax/.local/bin/nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe" )
-
+	cmd := exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe" )
 	if err := cmd.Run(); err != nil {
 		panic(fmt.Sprintf("Bmax: Error running the Command", err))
 	}
 }
 
 func exportTheme() {
-	//	cmd := exec.Command("/home/bmax/.local/bin/nvim --headless --listen /tmp/bmax-nvim.pipe")
-	cmd := exec.Command("/home/bmax/bmax/nvim-to-emacs-theme/export.sh")
-
+	cmd := exec.Command("./export.sh")
 	if err := cmd.Run(); err != nil {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
@@ -26,8 +22,9 @@ func exportTheme() {
 
 func main() {
 	go runNvim()
-	fmt.Println("sleeping")
-	time.Sleep(1 * time.Second)
+	fmt.Println("starting neovim")
+	time.Sleep(time.Second)
+	fmt.Println("exporting theme to theme.txt")
 	exportTheme()
 	fmt.Println("done")
 }
