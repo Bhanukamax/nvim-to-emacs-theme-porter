@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
+	"themer/lexer"
 )
 
 func checkAndPanic(err error, errorMsg string) {
@@ -68,5 +69,7 @@ func makeColorMap() ColorMap{
 	data, err := os.ReadFile("./theme.vim")
 	checkAndPanic(err, "reading file")
 	fmt.Println(string(data))
+
+	lexer.New()
 	return colorMap
 }
