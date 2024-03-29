@@ -1,11 +1,17 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"os/exec"
 	"time"
 )
 
+func checkAndPanic(err error, errorMsg string) {
+	if err != nil {
+		panic(fmt.Sprintf("Bmax: Error ", errorMsg, err))
+	}
+}
 func runCmd(errorMsg string, arg ...string) {
 	cmd := exec.Command(arg[0], arg[1:]...)
 	err := cmd.Run()
@@ -26,14 +32,19 @@ func exportTheme() {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
 }
-
+var shouldExport bool
 func main() {
-	go runNvim()
-	fmt.Println("starting neovim")
-	time.Sleep(time.Second/2)
-	fmt.Println("exporting theme to theme.vim")
-	exportTheme()
-	fmt.Println("done")
+	shouldExport = false
+	if shouldExport {
+		go runNvim()
+		fmt.Println("starting neovim")
+		time.Sleep(time.Second/2)
+		fmt.Println("exporting theme to theme.vim")
+		exportTheme()
+		fmt.Println("done")
+	}
+	colorMap := makeColorMap()
+	fmt.Println("Colol Map", colorMap)
 }
 
 	//	colorMap := makeColorMap()
@@ -54,5 +65,8 @@ type ColorMap map[string]Color
 
 func makeColorMap() ColorMap{
 	colorMap := make(map[string]Color)
+	data, err := os.ReadFile("./theme.vim")
+	checkAndPanic(err, "reading file")
+	fmt.Println(string(data))
 	return colorMap
 }
