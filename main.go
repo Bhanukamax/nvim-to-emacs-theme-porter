@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-func runCmd(errorMsg string, name string, arg ...string) {
-	cmd := exec.Command(name, arg...)
+func runCmd(errorMsg string, arg ...string) {
+	cmd := exec.Command(arg[0], arg[1:]...)
 	err := cmd.Run()
 	if err != nil {
-		panic(fmt.Sprintf(errorMsg, err))
+		panic(fmt.Sprintf("Bmax: Error ", errorMsg, err))
 	}
 }
 
