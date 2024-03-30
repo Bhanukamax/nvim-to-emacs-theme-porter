@@ -1,4 +1,4 @@
-main: main.go
+main: *.go **/*.go
 	go build main.go
 
 .PHONY: run
