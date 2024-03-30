@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-rm -rf theme.vim
+#touch -rf theme.vim
+#rm -rf theme.vim
 PIPE=/tmp/bmax-nvim.pipe
 nvim --server $PIPE --remote-send ':source ./export-highlights.vim<CR>'
 nvim --server $PIPE --remote-send ':lua vim.cmd.colorscheme("gruvbuddy")<CR>'

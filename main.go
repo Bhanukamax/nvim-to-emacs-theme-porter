@@ -1,11 +1,12 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"os/exec"
-	"time"
 	"themer/lexer"
+	"time"
+	"strings"
 )
 
 func checkAndPanic(err error, errorMsg string) {
@@ -13,63 +14,95 @@ func checkAndPanic(err error, errorMsg string) {
 		panic(fmt.Sprintf("Bmax: Error ", errorMsg, err))
 	}
 }
-func runCmd(errorMsg string, arg ...string) {
-	cmd := exec.Command(arg[0], arg[1:]...)
+func runCmdOrPanic(args []string, errorMsg string) {
+	cmd := exec.Command(args[0], args[1:]...)
 	err := cmd.Run()
 	if err != nil {
 		panic(fmt.Sprintf("Bmax: Error ", errorMsg, err))
 	}
 }
 
+func safeDeleteFile(fileName string) {
+	runCmdOrPanic([]string{"/usr/bin/env", "touch", fileName}, "Bmax: Error removing pipe")
+	runCmdOrPanic([]string{"/usr/bin/env", "rm", fileName}, "Bmax: Error removing pipe")
+}
+
 func runNvim() {
-	runCmd("Bmax: Error removing pipe", "/usr/bin/env", "touch", "/tmp/bmax-nvim.pipe" )
-	runCmd("Bmax: Error removing pipe", "/usr/bin/env", "rm", "/tmp/bmax-nvim.pipe" )
-	runCmd("Bmax: Error running the Command", "/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe" )
+	safeDeleteFile("./theme.vim")
+	runCmdOrPanic([]string{"/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe"}, "Bmax: Error running the Command")
 }
 
 func exportTheme() {
+	safeDeleteFile("./theme.vim")
 	cmd := exec.Command("./export.sh")
 	if err := cmd.Run(); err != nil {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
 }
+
 var shouldExport bool
+
 func main() {
 	shouldExport = false
 	if shouldExport {
 		go runNvim()
 		fmt.Println("starting neovim")
-		time.Sleep(time.Second/2)
+		time.Sleep(time.Second / 2)
 		fmt.Println("exporting theme to theme.vim")
 		exportTheme()
 		fmt.Println("done")
 	}
+
 	colorMap := makeColorMap()
-	fmt.Println("Colol Map", colorMap)
+	for	key, color := range colorMap {
+		fmt.Println("key: ", key, "color", color)
+	}
 }
 
-	//	colorMap := makeColorMap()
-	//	fmt.Println(colorMap)
+//	colorMap := makeColorMap()
+//	fmt.Println(colorMap)
 
 type Color struct {
-	fg string
-	bg string
+	Fg string
+	Bg string
 }
 
 func newColor(fg string, bg string) *Color {
 	return &Color{fg, bg}
 	//	c := Color{fg, bg}
-	//	return &c
+	//	return &ce
 }
 
 type ColorMap map[string]Color
 
-func makeColorMap() ColorMap{
+func parseColor(input string) Color {
+	color := Color{}
+
+	parts := strings.Fields(input)
+	for _, part := range parts {
+		if strings.HasPrefix(part, "guifg=") {
+			color.Fg = strings.TrimPrefix(part, "guifg=")
+		} else if strings.HasPrefix("guibg=", part) {
+			color.Bg = strings.TrimPrefix(part, "guibg=")
+		}
+	}
+
+	return color
+}
+
+func makeColorMap() ColorMap {
 	colorMap := make(map[string]Color)
 	data, err := os.ReadFile("./theme.vim")
 	checkAndPanic(err, "reading file")
-	fmt.Println(string(data))
+	//	fmt.Println(string(data))
+	lines := strings.Split(string(data), "\n")
+	for i, colorLine := range(lines) {
+		fmt.Println(i , lines[i])
+		parts := strings.Fields(colorLine)
+		key := parts[1]
+		colorMap[key] = parseColor(colorLine)
+	}
 
-	lexer.New()
+	lexer.New("foo")
 	return colorMap
 }
