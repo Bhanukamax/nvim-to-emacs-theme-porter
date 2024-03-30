@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"themer/lexer"
 	"time"
-	"strings"
 )
 
 func checkAndPanic(err error, errorMsg string) {
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	colorMap := makeColorMap()
-	for	key, color := range colorMap {
+	for key, color := range colorMap {
 		fmt.Println("key: ", key, "color", color)
 	}
 }
@@ -90,14 +90,40 @@ func parseColor(input string) Color {
 	return color
 }
 
+func getColorNameMap() map[string]string {
+	//   '(button ((t (:forground :inherit :underline t))))
+	//   '(cursor ((t (:background "#6cb080" ))))
+	//   '(secondary-selection ((t (:background "#3e3834" ))))
+	//   '(lsp-flycheck-info-unnecessary-face ((t (:foreground "#666666" :bold nil ))))
+	colorNameMap := map[string]string{
+		"default":                      "Normal",
+		"font-lock-comment-face":       "Comment",
+		"fringe":                       "LineNr",
+		"mode-line":                    "StatusLine",
+		"region":                       "Visual",
+		"font-lock-builtin-face":       "Keyword",
+		"font-lock-function-name-face": "Function",
+		"font-lock-keyword-face":       "Keyword",
+		"font-lock-string-face":        "String",
+		"font-lock-type-face":          "Type",
+		"font-lock-constant-face":      "Constant",
+		"font-lock-variable-name-face": "variable",
+		"minibuffer-prompt":            "commandmode",
+		"font-lock-warning-face":       "ErrorMsg",
+		"flycheck-info":                "DiagnosticInfo",
+	}
+
+	return colorNameMap
+}
+
 func makeColorMap() ColorMap {
 	colorMap := make(map[string]Color)
 	data, err := os.ReadFile("./theme.vim")
 	checkAndPanic(err, "reading file")
 	//	fmt.Println(string(data))
 	lines := strings.Split(string(data), "\n")
-	for i, colorLine := range(lines) {
-		fmt.Println(i , lines[i])
+	for i, colorLine := range lines {
+		fmt.Println(i, lines[i])
 		parts := strings.Fields(colorLine)
 		key := parts[1]
 		colorMap[key] = parseColor(colorLine)
