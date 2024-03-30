@@ -7,33 +7,22 @@ import (
 	"strings"
 	"themer/lexer"
 	"time"
+	"themer/shell"
 )
 
 func checkAndPanic(err error, errorMsg string) {
 	if err != nil {
-		panic(fmt.Sprintf("Bmax: Error ", errorMsg, err))
-	}
-}
-func runCmdOrPanic(args []string, errorMsg string) {
-	cmd := exec.Command(args[0], args[1:]...)
-	err := cmd.Run()
-	if err != nil {
-		panic(fmt.Sprintf("Bmax: Error ", errorMsg, err))
-	}
-}
-
-func safeDeleteFile(fileName string) {
-	runCmdOrPanic([]string{"/usr/bin/env", "touch", fileName}, "Bmax: Error removing pipe")
-	runCmdOrPanic([]string{"/usr/bin/env", "rm", fileName}, "Bmax: Error removing pipe")
+		panic(fmt.Sprintf("Bmaxo: Error", errorMsg, err))
+  	}
 }
 
 func runNvim() {
-	safeDeleteFile("./theme.vim")
-	runCmdOrPanic([]string{"/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe"}, "Bmax: Error running the Command")
+	shell.SafeDeleteFile("./theme.vim")
+	shell.RunCmdOrPanic([]string{"/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe"}, "Bmax: Error running the Command")
 }
 
 func exportTheme() {
-	safeDeleteFile("./theme.vim")
+	shell.SafeDeleteFile("./theme.vim")
 	cmd := exec.Command("./export.sh")
 	if err := cmd.Run(); err != nil {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
