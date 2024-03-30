@@ -43,7 +43,7 @@ func exportTheme() {
 var shouldExport bool
 
 func main() {
-	shouldExport = false
+	shouldExport = true
 	if shouldExport {
 		go runNvim()
 		fmt.Println("starting neovim")
@@ -54,9 +54,18 @@ func main() {
 	}
 
 	colorMap := makeColorMap()
-	for key, color := range colorMap {
-		fmt.Println("key: ", key, "color", color)
+	colorNameMap := getColorNameMap()
+	//	for key, color := range colorMap {
+		//		fmt.Println("key: ", key, "color", color)
+		//		fmt.Println("key", key, "color: ", color)
+	//	}
+
+	for key, color := range colorNameMap {
+		//		fmt.Println("key: ", key, "color", color)
+		fmt.Println("key", key, "color: ", colorMap[color])
 	}
+
+		fmt.Println("comment >>>", colorMap["Keyword"])
 }
 
 //	colorMap := makeColorMap()
@@ -65,6 +74,15 @@ func main() {
 type Color struct {
 	Fg string
 	Bg string
+}
+
+func (c Color) String() string {
+	if c.Bg != "" && c.Fg != "" {
+		return fmt.Sprintf("{ bg: %s, fg: %s }", c.Bg, c.Fg)
+	} else if c.Bg == "" {
+			return fmt.Sprintf("{ fg: %s }", c.Fg)
+	}
+	return fmt.Sprintf("{ bg: %s }", c.Bg)
 }
 
 func newColor(fg string, bg string) *Color {
@@ -78,12 +96,19 @@ type ColorMap map[string]Color
 func parseColor(input string) Color {
 	color := Color{}
 
+	fmt.Println("part: ", input)
 	parts := strings.Fields(input)
 	for _, part := range parts {
-		if strings.HasPrefix(part, "guifg=") {
-			color.Fg = strings.TrimPrefix(part, "guifg=")
-		} else if strings.HasPrefix("guibg=", part) {
-			color.Bg = strings.TrimPrefix(part, "guibg=")
+
+		pin := "guifg="
+
+		if strings.HasPrefix(part[:], pin) {
+			color.Fg = strings.TrimPrefix(part[:], pin)
+		}
+
+		pin = "guibg="
+		if strings.HasPrefix(part[:], pin) {
+			color.Bg = strings.TrimPrefix(part[:], pin)
 		}
 	}
 
@@ -122,8 +147,8 @@ func makeColorMap() ColorMap {
 	checkAndPanic(err, "reading file")
 	//	fmt.Println(string(data))
 	lines := strings.Split(string(data), "\n")
-	for i, colorLine := range lines {
-		fmt.Println(i, lines[i])
+	for _, colorLine := range lines {
+		//		fmt.Println(i, lines[i])
 		parts := strings.Fields(colorLine)
 		key := parts[1]
 		colorMap[key] = parseColor(colorLine)
