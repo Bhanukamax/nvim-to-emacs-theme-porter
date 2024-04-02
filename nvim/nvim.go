@@ -1,8 +1,9 @@
 package nvim
 
 import (
-	"themer/shell"
+	"fmt"
 	"os/exec"
+	"themer/shell"
 )
 
 type Nvim struct {
@@ -22,6 +23,8 @@ func (n *Nvim) StartServer() error {
 	return cmd.Run()
 }
 
-func (n *Nvim) SendCmd(args []string, errorMsg string) {
-	shell.RunCmdOrPanic(append([]string{"nvim", "--server", n.Pipe}, args...), errorMsg)
+func (n *Nvim) SendCmd(args []string) error {
+	fmt.Println("/usr/bin/env", append([]string{"nvim", "--server", n.Pipe, "--remote-send", "'"}, args...))
+	cmd := exec.Command("/usr/bin/env", append([]string{"nvim", "--server", n.Pipe, "--remote-send"}, args...)...)
+	return cmd.Run()
 }

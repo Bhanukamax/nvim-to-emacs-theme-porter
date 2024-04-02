@@ -19,13 +19,27 @@ func checkAndPanic(err error, errorMsg string) {
 
 func runNvim() error {
 	shell.SafeDeleteFile("./theme.vim")
-	cmd :=	exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe")
+	cmd := exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe")
 	return cmd.Run()
 }
 
-func exportTheme() {
+func checkExportErorr(err error){
+	if err != nil {
+		panic(err)
+	}
+}
+func exportTheme(n *nvim.Nvim) {
 	shell.SafeDeleteFile("./theme.vim")
-	cmd := exec.Command("./export.sh")
+		cmd := exec.Command("./export.sh")
+
+	//	err := n.SendCmd([]string{"':source", "./export-highlights.vim<CR>'"})
+	//	checkExportErorr(err)
+	//	err = n.SendCmd([]string{"':lua vim.cmd.colorscheme('gruvbuddy')<CR>'"})
+	//	checkExportErorr(err)
+	//	err = n.SendCmd([]string{"':call ExportHighlights('./theme.vim')<CR>'"})
+	//	checkExportErorr(err)
+	//	err = n.SendCmd([]string{"':qa!<CR>'"})
+	//	checkExportErorr(err)
 	if err := cmd.Run(); err != nil {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
@@ -37,7 +51,7 @@ func main() {
 	//	shouldExport = true
 	//	if shouldExport {
 	n := nvim.New("/tmp/bmax-nvim.pipe")
-	go func () {
+	go func() {
 		if err := n.StartServer(); err != nil {
 			fmt.Println("error running neovim headless ", err)
 		}
@@ -45,7 +59,7 @@ func main() {
 	fmt.Println("starting neovim")
 	time.Sleep(time.Second / 2)
 	fmt.Println("exporting theme to theme.vim")
-	exportTheme()
+	exportTheme(n)
 	fmt.Println("done")
 	//	}
 
