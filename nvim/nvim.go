@@ -1,18 +1,27 @@
 package nvim
 
+import (
+	"themer/shell"
+	"os/exec"
+)
+
 type Nvim struct {
 	Pipe string
 }
 
-func StartServer(pipe string) *Nvim {
+func New (pipe string) *Nvim{
+	return &Nvim {
+		Pipe: pipe,
+	}
+}
 
-	n := &Nvim{pipe }
+func (n *Nvim) StartServer() error {
+
 	shell.SafeDeleteFile("./theme.vim")
-	shell.RunCmdOrPanic([]string{"/usr/bin/env", "nvim", "--headless", "--listen", n.Pipe}, "Bmax: Error running the Commandtt")
-
-	return &n
+	cmd :=	exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe")
+	return cmd.Run()
 }
 
 func (n *Nvim) SendCmd(args []string, errorMsg string) {
-	shell.RunCmdOrPanic({"nvim", "--server", n.Pipe, ...args}, errorMsg)
+	shell.RunCmdOrPanic(append([]string{"nvim", "--server", n.Pipe}, args...), errorMsg)
 }

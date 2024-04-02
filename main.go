@@ -6,19 +6,21 @@ import (
 	"os/exec"
 	"strings"
 	"themer/lexer"
-	"time"
+	"themer/nvim"
 	"themer/shell"
+	"time"
 )
 
 func checkAndPanic(err error, errorMsg string) {
 	if err != nil {
 		panic(fmt.Sprintf("Bmaxo: Error", errorMsg, err))
-  	}
+	}
 }
 
-func runNvim() {
+func runNvim() error {
 	shell.SafeDeleteFile("./theme.vim")
-	shell.RunCmdOrPanic([]string{"/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe"}, "Bmax: Error running the Command")
+	cmd :=	exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe")
+	return cmd.Run()
 }
 
 func exportTheme() {
@@ -32,21 +34,26 @@ func exportTheme() {
 var shouldExport bool
 
 func main() {
-	shouldExport = true
-	if shouldExport {
-		go runNvim()
-		fmt.Println("starting neovim")
-		time.Sleep(time.Second / 2)
-		fmt.Println("exporting theme to theme.vim")
-		exportTheme()
-		fmt.Println("done")
-	}
+	//	shouldExport = true
+	//	if shouldExport {
+	n := nvim.New("/tmp/bmax-nvim.pipe")
+	go func () {
+		if err := n.StartServer(); err != nil {
+			fmt.Println("error running neovim headless ", err)
+		}
+	}()
+	fmt.Println("starting neovim")
+	time.Sleep(time.Second / 2)
+	fmt.Println("exporting theme to theme.vim")
+	exportTheme()
+	fmt.Println("done")
+	//	}
 
 	colorMap := makeColorMap()
 	colorNameMap := getColorNameMap()
 	//	for key, color := range colorMap {
-		//		fmt.Println("key: ", key, "color", color)
-		//		fmt.Println("key", key, "color: ", color)
+	//		fmt.Println("key: ", key, "color", color)
+	//		fmt.Println("key", key, "color: ", color)
 	//	}
 
 	for key, color := range colorNameMap {
@@ -54,7 +61,7 @@ func main() {
 		fmt.Println("key", key, "color: ", colorMap[color])
 	}
 
-		fmt.Println("comment >>>", colorMap["Keyword"])
+	fmt.Println("comment >>>", colorMap["Keyword"])
 }
 
 //	colorMap := makeColorMap()
@@ -69,7 +76,7 @@ func (c Color) String() string {
 	if c.Bg != "" && c.Fg != "" {
 		return fmt.Sprintf("{ bg: %s, fg: %s }", c.Bg, c.Fg)
 	} else if c.Bg == "" {
-			return fmt.Sprintf("{ fg: %s }", c.Fg)
+		return fmt.Sprintf("{ fg: %s }", c.Fg)
 	}
 	return fmt.Sprintf("{ bg: %s }", c.Bg)
 }
