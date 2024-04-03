@@ -30,16 +30,7 @@ func checkExportErorr(err error){
 }
 func exportTheme(n *nvim.Nvim) {
 	shell.SafeDeleteFile("./theme.vim")
-		cmd := exec.Command("./export.sh")
-
-	//	err := n.SendCmd([]string{"':source", "./export-highlights.vim<CR>'"})
-	//	checkExportErorr(err)
-	//	err = n.SendCmd([]string{"':lua vim.cmd.colorscheme('gruvbuddy')<CR>'"})
-	//	checkExportErorr(err)
-	//	err = n.SendCmd([]string{"':call ExportHighlights('./theme.vim')<CR>'"})
-	//	checkExportErorr(err)
-	//	err = n.SendCmd([]string{"':qa!<CR>'"})
-	//	checkExportErorr(err)
+	cmd := exec.Command("./export.sh")
 	if err := cmd.Run(); err != nil {
 		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
@@ -151,6 +142,12 @@ func getColorNameMap() map[string]string {
 	return colorNameMap
 }
 
+func doseKeyExist(m map[string]Color, key string) bool{
+	_, ok := m[key]
+
+	return ok
+}
+
 func makeColorMap() ColorMap {
 	colorMap := make(map[string]Color)
 	data, err := os.ReadFile("./theme.vim")
@@ -159,9 +156,12 @@ func makeColorMap() ColorMap {
 	lines := strings.Split(string(data), "\n")
 	for _, colorLine := range lines {
 		//		fmt.Println(i, lines[i])
+
 		parts := strings.Fields(colorLine)
 		key := parts[1]
-		colorMap[key] = parseColor(colorLine)
+		if !doseKeyExist(colorMap, key) {
+			colorMap[key] = parseColor(colorLine)
+		}
 	}
 
 	lexer.New("foo")
