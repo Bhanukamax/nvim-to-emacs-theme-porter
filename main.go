@@ -3,36 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 	"themer/lexer"
 	"themer/nvim"
-	"themer/shell"
 	"time"
 )
 
 func checkAndPanic(err error, errorMsg string) {
 	if err != nil {
 		panic(fmt.Sprintf("Bmaxo: Error", errorMsg, err))
-	}
-}
-
-func runNvim() error {
-	shell.SafeDeleteFile("./theme.vim")
-	cmd := exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe")
-	return cmd.Run()
-}
-
-func checkExportErorr(err error){
-	if err != nil {
-		panic(err)
-	}
-}
-func exportTheme(n *nvim.Nvim) {
-	shell.SafeDeleteFile("./theme.vim")
-	cmd := exec.Command("./export.sh")
-	if err := cmd.Run(); err != nil {
-		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
 	}
 }
 
@@ -50,7 +29,7 @@ func main() {
 	fmt.Println("starting neovim")
 	time.Sleep(time.Second / 2)
 	fmt.Println("exporting theme to theme.vim")
-	exportTheme(n)
+	nvim.ExportTheme()
 	fmt.Println("done")
 	//	}
 
@@ -61,10 +40,8 @@ func main() {
 	//		fmt.Println("key", key, "color: ", color)
 	//	}
 
-	for key, color := range colorNameMap {
-		//		fmt.Println("key: ", key, "color", color)
-		fmt.Println("key", key, "color: ", colorMap[color])
-	}
+
+	makeTheme("bmax-buddy-theme", colorNameMap, colorMap)
 
 	fmt.Println("comment >>>", colorMap["Keyword"])
 }
@@ -142,10 +119,36 @@ func getColorNameMap() map[string]string {
 	return colorNameMap
 }
 
-func doseKeyExist(m map[string]Color, key string) bool{
+func mapHasKey(m map[string]Color, key string) bool{
 	_, ok := m[key]
 
 	return ok
+}
+
+
+func makeTheme(themeName string, names map[string]string, colorMap ColorMap)  {
+	theme := `(deftheme ` + themeName + ` "DOCSTRING for ` + themeName + `")
+  (custom-theme-set-faces '` + themeName + `
+`
+
+	for key, color := range names {
+		//		fmt.Println("key: ", key, "color", color)
+		fmt.Println("key", key, "color: ", colorMap[color])
+		c := colorMap[color]
+// 		theme += fmt.Sprintf(`   '(%s ((t (:foreground "%s" :background "%s" ))))
+// `, key, c.Fg, c.Bg)
+		theme += fmt.Sprintf(`   '(%s ((t (`, key)
+
+		if c.Fg != "" {
+			theme += fmt.Sprintf(`:foreground "%s"`, c.Fg)
+		}
+		if c.Bg != "" {
+			theme += fmt.Sprintf(`:background "%s"`, c.Bg)
+		}
+		theme +=  `))))
+`
+	}
+	fmt.Println(theme)
 }
 
 func makeColorMap() ColorMap {
@@ -159,7 +162,7 @@ func makeColorMap() ColorMap {
 
 		parts := strings.Fields(colorLine)
 		key := parts[1]
-		if !doseKeyExist(colorMap, key) {
+		if !mapHasKey(colorMap, key) {
 			colorMap[key] = parseColor(colorLine)
 		}
 	}
