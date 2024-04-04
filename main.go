@@ -40,7 +40,6 @@ func main() {
 	//		fmt.Println("key", key, "color: ", color)
 	//	}
 
-
 	makeTheme("bmax-buddy-theme", colorNameMap, colorMap)
 
 	fmt.Println("comment >>>", colorMap["Keyword"])
@@ -101,6 +100,7 @@ func getColorNameMap() map[string]string {
 	colorNameMap := map[string]string{
 		"default":                      "Normal",
 		"font-lock-comment-face":       "Comment",
+		"line-number":                  "LineNr",
 		"fringe":                       "LineNr",
 		"mode-line":                    "StatusLine",
 		"region":                       "Visual",
@@ -114,19 +114,20 @@ func getColorNameMap() map[string]string {
 		"minibuffer-prompt":            "commandmode",
 		"font-lock-warning-face":       "ErrorMsg",
 		"flycheck-info":                "DiagnosticInfo",
+		"web-mode-variable-name-face":  "@property",
+		"web-mode-html-tag-face":       "Function",
 	}
 
 	return colorNameMap
 }
 
-func mapHasKey(m map[string]Color, key string) bool{
+func mapHasKey(m map[string]Color, key string) bool {
 	_, ok := m[key]
 
 	return ok
 }
 
-
-func makeTheme(themeName string, names map[string]string, colorMap ColorMap)  {
+func makeTheme(themeName string, names map[string]string, colorMap ColorMap) {
 	theme := `(deftheme ` + themeName + ` "DOCSTRING for ` + themeName + `")
   (custom-theme-set-faces '` + themeName + `
 `
@@ -135,8 +136,8 @@ func makeTheme(themeName string, names map[string]string, colorMap ColorMap)  {
 		//		fmt.Println("key: ", key, "color", color)
 		fmt.Println("key", key, "color: ", colorMap[color])
 		c := colorMap[color]
-// 		theme += fmt.Sprintf(`   '(%s ((t (:foreground "%s" :background "%s" ))))
-// `, key, c.Fg, c.Bg)
+		// 		theme += fmt.Sprintf(`   '(%s ((t (:foreground "%s" :background "%s" ))))
+		// `, key, c.Fg, c.Bg)
 		theme += fmt.Sprintf(`   '(%s ((t (`, key)
 
 		if c.Fg != "" {
@@ -145,7 +146,7 @@ func makeTheme(themeName string, names map[string]string, colorMap ColorMap)  {
 		if c.Bg != "" {
 			theme += fmt.Sprintf(`:background "%s"`, c.Bg)
 		}
-		theme +=  `))))
+		theme += `))))
 `
 	}
 	fmt.Println(theme)
