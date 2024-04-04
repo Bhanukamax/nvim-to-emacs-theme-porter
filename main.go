@@ -49,8 +49,10 @@ func main() {
 //	fmt.Println(colorMap)
 
 type Color struct {
-	Fg string
-	Bg string
+	Fg     string
+	Bg     string
+	Weight string
+	Italic bool
 }
 
 func (c Color) String() string {
@@ -63,7 +65,7 @@ func (c Color) String() string {
 }
 
 func newColor(fg string, bg string) *Color {
-	return &Color{fg, bg}
+	return &Color{fg, bg, "", false}
 	//	c := Color{fg, bg}
 	//	return &ce
 }
@@ -78,7 +80,6 @@ func parseColor(input string) Color {
 	for _, part := range parts {
 
 		pin := "guifg="
-
 		if strings.HasPrefix(part[:], pin) {
 			color.Fg = strings.TrimPrefix(part[:], pin)
 		}
@@ -87,6 +88,17 @@ func parseColor(input string) Color {
 		if strings.HasPrefix(part[:], pin) {
 			color.Bg = strings.TrimPrefix(part[:], pin)
 		}
+
+		pin = "gui=bold"
+		if strings.HasPrefix(part[:], pin) {
+			color.Weight = "bold"
+		}
+
+		pin = "gui=italic"
+		if strings.HasPrefix(part[:], pin) {
+			color.Italic = true
+		}
+
 	}
 
 	return color
@@ -116,6 +128,7 @@ func getColorNameMap() map[string]string {
 		"flycheck-info":                "DiagnosticInfo",
 		"web-mode-variable-name-face":  "@property",
 		"web-mode-html-tag-face":       "Function",
+		"web-mode-type-face":           "@type",
 	}
 
 	return colorNameMap
@@ -144,8 +157,15 @@ func makeTheme(themeName string, names map[string]string, colorMap ColorMap) {
 			theme += fmt.Sprintf(`:foreground "%s"`, c.Fg)
 		}
 		if c.Bg != "" {
-			theme += fmt.Sprintf(`:background "%s"`, c.Bg)
+			theme += fmt.Sprintf(` :background "%s"`, c.Bg)
 		}
+		if c.Weight != "" {
+			theme += fmt.Sprintf(` :weight %s`, c.Weight)
+		}
+		if c.Italic {
+			theme += fmt.Sprintf(" :italic t")
+		}
+
 		theme += `))))
 `
 	}
