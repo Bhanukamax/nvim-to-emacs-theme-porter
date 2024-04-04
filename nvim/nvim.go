@@ -1,18 +1,38 @@
 package nvim
 
+import (
+	"fmt"
+	"os/exec"
+	"themer/shell"
+)
+
 type Nvim struct {
 	Pipe string
 }
 
-func StartServer(pipe string) *Nvim {
-
-	n := &Nvim{pipe }
-	shell.SafeDeleteFile("./theme.vim")
-	shell.RunCmdOrPanic([]string{"/usr/bin/env", "nvim", "--headless", "--listen", n.Pipe}, "Bmax: Error running the Commandtt")
-
-	return &n
+func New (pipe string) *Nvim{
+	return &Nvim {
+		Pipe: pipe,
+	}
 }
 
-func (n *Nvim) SendCmd(args []string, errorMsg string) {
-	shell.RunCmdOrPanic({"nvim", "--server", n.Pipe, ...args}, errorMsg)
+func (n *Nvim) StartServer() error {
+
+	shell.SafeDeleteFile("./theme.vim")
+	cmd :=	exec.Command("/usr/bin/env", "nvim", "--headless", "--listen", "/tmp/bmax-nvim.pipe")
+	return cmd.Run()
+}
+
+func (n *Nvim) SendCmd(args []string) error {
+	fmt.Println("/usr/bin/env", append([]string{"nvim", "--server", n.Pipe, "--remote-send", "'"}, args...))
+	cmd := exec.Command("/usr/bin/env", append([]string{"nvim", "--server", n.Pipe, "--remote-send"}, args...)...)
+	return cmd.Run()
+}
+
+func ExportTheme() {
+	shell.SafeDeleteFile("./theme.vim")
+	cmd := exec.Command("./export.sh")
+	if err := cmd.Run(); err != nil {
+		fmt.Println(fmt.Sprintf("Bmax: Error exporting theme", err))
+	}
 }
