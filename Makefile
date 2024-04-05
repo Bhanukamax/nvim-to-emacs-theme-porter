@@ -1,6 +1,6 @@
 main: *.go **/*.go
-	go build main.go
+	go build .
 
 .PHONY: run
 run: main
-	./main
+	./themer

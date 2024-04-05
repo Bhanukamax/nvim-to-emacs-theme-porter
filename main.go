@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"themer/lexer"
 	"themer/nvim"
 	"time"
 )
@@ -18,44 +17,32 @@ func checkAndPanic(err error, errorMsg string) {
 var shouldExport bool
 
 func main() {
-	//	shouldExport = true
-	//	if shouldExport {
 	n := nvim.New("/tmp/bmax-nvim.pipe")
 	go func() {
 		if err := n.StartServer(); err != nil {
 			fmt.Println("error running neovim headless ", err)
 		}
 	}()
-	fmt.Println("starting neovim")
+	fmt.Println(";; starting neovim")
 	time.Sleep(time.Second / 2)
-	fmt.Println("exporting theme to theme.vim")
+	fmt.Println(";; exporting theme to theme.vim")
 	nvim.ExportTheme()
-	fmt.Println("done")
-	//	}
+	fmt.Println(";; done exporting from nvim")
 
-	colorMap := makeColorMap()
+	faceMap := makeFaceMap()
 	colorNameMap := getColorNameMap()
-	//	for key, color := range colorMap {
-	//		fmt.Println("key: ", key, "color", color)
-	//		fmt.Println("key", key, "color: ", color)
-	//	}
 
-	makeTheme("bmax-buddy-theme", colorNameMap, colorMap)
-
-	fmt.Println("comment >>>", colorMap["Keyword"])
+	makeTheme("bmax-buddy-theme", colorNameMap, faceMap)
 }
 
-//	colorMap := makeColorMap()
-//	fmt.Println(colorMap)
-
-type Color struct {
+type Face struct {
 	Fg     string
 	Bg     string
 	Weight string
 	Italic bool
 }
 
-func (c Color) String() string {
+func (c Face) String() string {
 	if c.Bg != "" && c.Fg != "" {
 		return fmt.Sprintf("{ bg: %s, fg: %s }", c.Bg, c.Fg)
 	} else if c.Bg == "" {
@@ -64,18 +51,15 @@ func (c Color) String() string {
 	return fmt.Sprintf("{ bg: %s }", c.Bg)
 }
 
-func newColor(fg string, bg string) *Color {
-	return &Color{fg, bg, "", false}
-	//	c := Color{fg, bg}
-	//	return &ce
+func newColor(fg string, bg string) *Face {
+	return &Face{fg, bg, "", false}
 }
 
-type ColorMap map[string]Color
+type FaceMap map[string]Face
 
-func parseColor(input string) Color {
-	color := Color{}
+func parseColor(input string) Face {
+	color := Face{}
 
-	fmt.Println("part: ", input)
 	parts := strings.Fields(input)
 	for _, part := range parts {
 
@@ -134,23 +118,19 @@ func getColorNameMap() map[string]string {
 	return colorNameMap
 }
 
-func mapHasKey(m map[string]Color, key string) bool {
+func mapHasKey(m map[string]Face, key string) bool {
 	_, ok := m[key]
 
 	return ok
 }
 
-func makeTheme(themeName string, names map[string]string, colorMap ColorMap) {
+func makeTheme(themeName string, names map[string]string, faceMap FaceMap) {
 	theme := `(deftheme ` + themeName + ` "DOCSTRING for ` + themeName + `")
   (custom-theme-set-faces '` + themeName + `
 `
 
 	for key, color := range names {
-		//		fmt.Println("key: ", key, "color", color)
-		fmt.Println("key", key, "color: ", colorMap[color])
-		c := colorMap[color]
-		// 		theme += fmt.Sprintf(`   '(%s ((t (:foreground "%s" :background "%s" ))))
-		// `, key, c.Fg, c.Bg)
+		c := faceMap[color]
 		theme += fmt.Sprintf(`   '(%s ((t (`, key)
 
 		if c.Fg != "" {
@@ -169,25 +149,36 @@ func makeTheme(themeName string, names map[string]string, colorMap ColorMap) {
 		theme += `))))
 `
 	}
+	theme += `)
+;;;###autoload
+(and load-file-name
+     (boundp 'custom-theme-load-path)
+     (add-to-list 'custom-theme-load-path
+                  (file-name-as-directory
+                   (file-name-directory load-file-name))))
+;; Automatically add this theme to the load path
+
+(provide-theme '` + themeName + `)
+
+;;; ` + themeName + `-theme.el ends here
+;;; save this to your theme load path as "` + themeName + `-theme.el"
+
+`
+
 	fmt.Println(theme)
 }
 
-func makeColorMap() ColorMap {
-	colorMap := make(map[string]Color)
+func makeFaceMap() FaceMap {
+	faceMap := make(map[string]Face)
 	data, err := os.ReadFile("./theme.vim")
 	checkAndPanic(err, "reading file")
-	//	fmt.Println(string(data))
 	lines := strings.Split(string(data), "\n")
 	for _, colorLine := range lines {
-		//		fmt.Println(i, lines[i])
-
 		parts := strings.Fields(colorLine)
 		key := parts[1]
-		if !mapHasKey(colorMap, key) {
-			colorMap[key] = parseColor(colorLine)
+		if !mapHasKey(faceMap, key) {
+			faceMap[key] = parseColor(colorLine)
 		}
 	}
-
-	lexer.New("foo")
-	return colorMap
+	return faceMap
 }
